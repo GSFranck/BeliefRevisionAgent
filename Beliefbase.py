@@ -30,11 +30,11 @@ class BeliefRevisionAgent:
         self.belief_base = []
 
     def add_belief(self, belief):
-        heapq.heappush(self.belief_base, belief)
+        self.belief_base.append(belief)
+        self.belief_base.sort()
 
     def remove_belief(self, belief):
         self.belief_base.remove(belief)
-        heapq.heapify(self.belief_base)
 
     def check_entailment(self, belief):
         neg_belief = Not(belief)
