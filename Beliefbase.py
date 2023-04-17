@@ -1,26 +1,3 @@
-import heapq
-
-class BeliefBase:
-    def __init__(self):
-        self.beliefs=[]
-        
-    def addBelief(self,order,belief):
-        # Inserts belief and sorts belief base based on order
-        heapq.heappush(self.beliefs,[order,belief])
-        print(f"Belief {belief} with order {order} was inserted")
-        
-    def removeSmallest(self):
-        # Removes smallest order belief
-        removed=heapq.heappop(self.beliefs)
-        print(f"Belief {removed[1]} with order {removed[0]} was removed")
-
-    def replaceSmallest(self,order,belief):
-        # Removes smallest order belief and inserts new belief in base
-        removed=heapq.heapreplace(self.beliefs, [order,belief])
-        print(f"Belief {removed[1]} with order {removed[0]} was removed, and belief {belief} with order {order} was inserted")
-
-
-
 from sympy import symbols, Not, And, Or
 from sympy.logic import to_cnf, simplify_logic
 from sympy.logic.inference import satisfiable
@@ -31,28 +8,17 @@ class BeliefRevisionAgent:
 
     def add_belief(self, belief):
         self.belief_base.append(belief)
-        self.belief_base.sort()
 
     def remove_belief(self, belief):
         self.belief_base.remove(belief)
 
     def check_entailment(self, belief):
+        cnf = And(*self.belief_base)
         neg_belief = Not(belief)
-        cnf = And(*self.belief_base, neg_belief)
-        cnf = to_cnf(cnf)
-        clauses = set(map(lambda x: frozenset(x.args), cnf.args))
+        combined_cnf = And(cnf, neg_belief)
+        return not satisfiable(combined_cnf)
 
-        while True:
-            new_clauses = set()
-            for c1 in clauses:
-                for c2 in clauses:
-                    resolvents = self.resolve(c1, c2)
-                    if set() in resolvents:
-                        return True
-                    new_clauses |= resolvents
-            if new_clauses.issubset(clauses):
-                return False
-            clauses |= new_clauses
+
 
     def resolve(self, c1, c2):
         resolvents = set()
@@ -72,25 +38,21 @@ class BeliefRevisionAgent:
 
         for subset in belief_powerset:
             if not self.check_entailment(And(*subset, belief)):
-                self.belief_base = self.to_heap(subset)
+                self.belief_base = subset
                 return
 
     def expand(self, belief):
-        if not self.check_entailment(belief):
-            self.add_belief(belief)
+        cnf_belief = to_cnf(belief)
+        if not self.check_entailment(cnf_belief):
+            self.add_belief(cnf_belief)
 
-    def to_heap(self, beliefs):
-        h = []
-        for belief in beliefs:
-            heapq.heappush(h, belief)
-        return h
+
 
     def get_powerset(self, s):
         powerset = [[]]
         for elem in s:
             powerset += [subset + [elem] for subset in powerset]
         return powerset
-
     def agm_postulates(self):
         # Test the Success postulate
         print("Success postulate:")

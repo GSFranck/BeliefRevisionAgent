@@ -1,5 +1,6 @@
-from belief_revision_agent import BeliefRevisionAgent
+from Beliefbase import BeliefRevisionAgent
 from sympy import symbols
+from sympy.parsing.sympy_parser import parse_expr
 
 def main():
     agent = BeliefRevisionAgent()
@@ -31,7 +32,7 @@ def main():
 
         belief = None
         if action != "postulates":
-            belief = symbols(tokens[1])
+            belief = parse_expr(tokens[1])
 
         if action == "expand":
             agent.expand(belief)
