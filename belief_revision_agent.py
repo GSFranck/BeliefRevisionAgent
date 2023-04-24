@@ -1,5 +1,3 @@
-from operator import neg
-
 from sympy import And, Or
 from sympy.logic import to_cnf
 
