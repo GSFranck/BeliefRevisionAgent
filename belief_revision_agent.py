@@ -3,12 +3,8 @@ from sympy.logic import to_cnf
 
 class BeliefRevisonAgent:
     """
-    Belief base that implements epistemic entrenchment
-    with finite partial entrenchment ranking.
-    Each belief is assigned an order (a real number between 0 and 1)
-    which determines its entrenchment, i.e. the level of commitment
-    to maintain it when applying a change function (contraction,
-    revision, etc).
+        This is an implementation of a belief revision agent. It holds a belief base (list) of propositional logic sentences and has
+        methods like pl_resolution, contract, expand and revise to alter the belief base. 
     """
 
     def __init__(self):
@@ -58,15 +54,15 @@ class BeliefRevisonAgent:
         for li in self._make_literals(Ci):
             for lj in self._make_literals(Cj):
                 if li == ~lj or ~li == lj:
-                    result = [x for x in self._make_literals(Ci) if x != li] + [x for x in self._make_literals(Cj) if x != lj]
-                    result = list(set(result)) # remove duplicates
+                    resolved = [l for l in self._make_literals(Ci) if l != li] + [l for l in self._make_literals(Cj) if l != lj]
+                    resolved = list(set(resolved)) # remove duplicates
                     
-                    if len(result) == 0:
+                    if len(resolved) == 0:
                         resolvents.append(False)
-                    elif len(result) == 1:
-                        resolvents.extend(result)
+                    elif len(resolved) == 1:
+                        resolvents.extend(resolved)
                     else:
-                        resolvents.append(Or(*result))
+                        resolvents.append(Or(*resolved))
         return resolvents
 
     # Function that splits a sentence on CNF form into clauses
@@ -90,7 +86,7 @@ class BeliefRevisonAgent:
                 if self.pl_resolution(sentence, base):
                     continue
                 else:
-                    self._retract(s)
+                    self._remove(s)
     
     def expand(self, sentence):
         # check for logical closure (if sentence is entailed it is already implicit understood in BB)
@@ -98,10 +94,10 @@ class BeliefRevisonAgent:
             self.add(sentence)
 
     def revise(self, sentence):
-        self._retract(~sentence)
+        self._remove(~sentence)
         self.expand(sentence)
 
-    def _retract(self, sentence):
+    def _remove(self, sentence):
         sentence = to_cnf(sentence)
         if sentence in self.belif_base:
             self.belif_base.remove(sentence)
